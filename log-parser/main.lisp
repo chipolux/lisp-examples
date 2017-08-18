@@ -53,10 +53,11 @@
   (subseq (sort alist #'> :key #'cdr) 0 (min n (length alist))))
 
 
-(defparameter *ip-api-url* "http://ip-api.com/line/~a\?lang\=en\&fields\=status,country,regionName,city,org")
+(defparameter *ip-api-url* "http://ip-api.com/line/~a?lang=en&fields=status,country,regionName,city,org")
 
 
 (defun load-ip-info (ip)
+  "Uses drakma to load info about an ip from ip-api.com."
   (let ((s (drakma:http-request (format nil *ip-api-url* ip) :want-stream t)))
     (if (equal (read-line s) "success")
       (list :country (read-line s) :region (read-line s) :city (read-line s) :org (read-line s)))))
