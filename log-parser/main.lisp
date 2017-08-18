@@ -6,8 +6,8 @@
 ;;;; {when} format:
 ;;;; DD/MMM/YYYY:hh:mm:ss +ZZZZ
 
-;; (ql:quickload :cl-ppcre)
-;; (ql:quickload :drakma)
+(ql:quickload :cl-ppcre)
+(ql:quickload :drakma)
 
 
 (defparameter *entry-regex* "(.*) - (.*) \\[(.*)\\] \"(.*)\"")
