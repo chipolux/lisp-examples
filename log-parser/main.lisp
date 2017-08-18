@@ -34,16 +34,23 @@
           do (record-log-entry (parse-log-entry line)))))
 
 
+(defun ip-connection-count ()
+  "Returns an alist of ips and the number of times they connected."
+  (let ((alist nil))
+    (maphash #'(lambda (k v) (push (cons k (length v)) alist)) *ip-db*)
+    alist))
 
 
 (defun hash-table-alist (table)
+  "Converts a hash-table to an alist."
   (let ((alist nil))
     (maphash #'(lambda (k v) (push (cons k v) alist)) table)
     alist))
 
 
-(defun hash-table-top-n-values (table n)
-  (subseq (sort (hash-table-alist table) #'> :key #'cdr) 0 n))
+(defun top-n (alist n)
+  "returns the top n elements of an alist sorted by cdr."
+  (subseq (sort alist #'> :key #'cdr) 0 (min n (length alist))))
 
 
 (defparameter *ip-api-url* "http://ip-api.com/line/~a\?lang\=en\&fields\=status,country,regionName,city,org")
