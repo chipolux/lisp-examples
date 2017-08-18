@@ -9,28 +9,31 @@
 (ql:quickload :cl-ppcre)
 (ql:quickload :drakma)
 
-
-(defparameter *entry-regex* "(.*) - (.*) \\[(.*)\\] \"(.*)\"")
+;; groups: ip, user, when, method, uri, protocol, status, size
+(defparameter *entry-regex* "(.*) - (.*) \\[(.*)\\] \"(.*) (.*) (.*)\" (.*) (.*)")
 (defvar *ip-db* (make-hash-table :test #'equal))
 
 
+(defun parse-log-entry (line)
+  "Uses regex to parse interesting data a log entry."
+  (cl-ppcre:register-groups-bind (ip nil when method uri nil status nil) (*entry-regex* line)
+    (list :ip ip :when when :method method :uri uri :status status)))
+
+
+(defun record-log-entry (entry)
+  "Records an entry in the *ip-db* by ip."
+  (let ((ip (getf entry :ip)))
+    (push entry (gethash ip *ip-db*))))
+
+
 (defun read-log-file (path)
+  "Reads a log file, parses data from each line, and stores data into *ip-db*."
   (with-open-file (f path)
     (loop for line = (read-line f nil)
           while line
           do (record-log-entry (parse-log-entry line)))))
 
 
-(defun parse-log-entry (line)
-  (cl-ppcre:register-groups-bind (ip nil when) (*entry-regex* line)
-    (list :ip ip :when when)))
-
-
-(defun record-log-entry (entry)
-  (let* ((ip (getf entry :ip)) (times-seen (gethash ip *ip-db*)))
-    (if times-seen
-      (setf (gethash ip *ip-db*) (1+ times-seen))
-      (setf (gethash ip *ip-db*) 1))))
 
 
 (defun hash-table-alist (table)
