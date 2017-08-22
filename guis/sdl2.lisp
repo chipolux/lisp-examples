@@ -26,7 +26,9 @@
         (sdl2:fill-rect screen-surface nil (sdl2:map-rgb (sdl2:surface-format screen-surface) 0 255 0))
         (sdl2:update-window window)
         (sdl2:delay delay))
-      (sdl2:with-event-loop
-        (:method :poll)
-        (:idle () (sdl2:gl-swap-window window))
+      (sdl2:with-event-loop (:method :poll)
+        (:keyup (:keysym keysym)  ; get keyup events with the key symbol as keysym
+          (when (sdl2:scancode= (sdl2:scancode-value keysym) :scancode-escape)
+          (sdl2:push-event :quit)))
+        (:idle () (sdl2:gl-swap-window window))  ; on idle swap the window framebuffer
         (:quit () t)))))
