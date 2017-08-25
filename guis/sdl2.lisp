@@ -16,19 +16,29 @@
 ;     (:quit-event () t)
 ;     (:key-up-event () (sdl:push-quit-event))))
 
-(defparameter *screen-width* 1280)
-(defparameter *screen-height* 720)
+(defparameter *screen-width* 800)
+(defparameter *screen-height* 600)
 
-(defun main (&key (delay 2000))
-  (sdl2:with-init (:video)
+(defun format-now (msg &rest args)
+  (apply #'format t msg args)
+  (finish-output))
+
+(defun main ()
+  (sdl2:with-init (:everything)
+    (format-now "Using SDL Library Version: ~D.~D.~D~%"
+            sdl2-ffi:+sdl-major-version+
+            sdl2-ffi:+sdl-minor-version+
+            sdl2-ffi:+sdl-patchlevel+)
     (sdl2:with-window (window :title "Some Window" :w *screen-width* :h *screen-height*)
-      (let ((screen-surface (sdl2:get-window-surface window)))
-        (sdl2:fill-rect screen-surface nil (sdl2:map-rgb (sdl2:surface-format screen-surface) 0 255 0))
-        (sdl2:update-window window)
-        (sdl2:delay delay))
+      ; (let ((screen-surface (sdl2:get-window-surface window)))
+      ;   (sdl2:fill-rect screen-surface nil (sdl2:map-rgb (sdl2:surface-format screen-surface) 0 255 0))
+      ;   (sdl2:update-window window)
+      ;   (sdl2:delay delay))
+      (format-now "Beginning main loop.~%")
       (sdl2:with-event-loop (:method :poll)
         (:keyup (:keysym keysym)  ; get keyup events with the key symbol as keysym
           (when (sdl2:scancode= (sdl2:scancode-value keysym) :scancode-escape)
-          (sdl2:push-event :quit)))
+            (format-now "Pushing quit event.~%")
+            (sdl2:push-event :quit)))
         (:idle () (sdl2:gl-swap-window window))  ; on idle swap the window framebuffer
         (:quit () t)))))
