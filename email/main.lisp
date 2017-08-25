@@ -3,8 +3,10 @@
 
 
 (defun collect-plain-emails (dir)
-  (loop
-    for path in (pathing:list-directory dir)
-    for (header body) = (multiple-value-list (email:read-email-file path))
-    when (email:plaintext-p header)
-    collect body))
+  (let ((paths (pathing:list-directory dir)))
+    (format t "Total Files: ~a~%" (length paths))
+    (loop
+      for path in paths
+      for (header body) = (multiple-value-list (email:read-email-file path))
+      when (email:plaintext-p header)
+      collect body)))
