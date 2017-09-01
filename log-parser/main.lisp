@@ -11,6 +11,8 @@
 
 ;; groups: ip, user, when, method, uri, protocol, status, size
 (defparameter *entry-regex* "(.*) - (.*) \\[(.*)\\] \"(.*) (.*) (.*)\" (.*) (.*)")
+;; groups: day, month, year, hour, minute, second
+(defparameter *date-regex* "(.*)/(.*)/(.*):(.*):(.*):(.*)")
 (defvar *ip-db* (make-hash-table :test #'equal))
 
 
