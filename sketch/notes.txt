@@ -1,0 +1,14 @@
+Get SDL2: https://www.libsdl.org/download-2.0.php
+Get SDL2_image: https://www.libsdl.org/projects/SDL_image/
+Get SDL2_ttf: https://www.libsdl.org/projects/SDL_ttf/
+Get libffi: Install Gimp or Emacs and steal its libffi-6.dll
+
+Get GCC, etc. (for configuring libffi stuff):
+    Install MSYS2: https://msys2.github.io/
+    In MSYS2 Install: pacman -S gcc libffi libffi-devel pkg-config
+    Add msys64/usr/bin to your path. (so you can access gcc, etc.)
+
+Finally: (ql:quickload :sketch)
+
+I've kept a copy of the dlls you need on windows in this repo as libs.zip
+so you don't have to download everything if you're working on 64bit Win10.
