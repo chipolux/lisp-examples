@@ -128,5 +128,65 @@
               300 100
               400 400))))
 
+;; We're off the rails now boys!
 
-(defun run () (make-instance 'tut-20))
+;; Transforms:
+;;   :set-matrix
+;;   :push-matrix
+;;   :pop-matrix
+;;   :translate
+;;   :rotate
+;;   :scale
+;;   :with-matrix
+;;   :with-identity-matrix
+;;   :with-current-matrix
+
+;; Text:
+;;   :make-font
+;;   :with-font
+;;   :set-font
+;;   :text
+
+;; Images:
+;;   :load-resource
+;;   :image
+
+(defun run (tut)
+  (case tut
+    (:sinewave (make-instance 'sinewave))
+    (:1 (make-instance 'tut-1))
+    (:2 (make-instance 'tut-2))
+    (:3 (make-instance 'tut-3))
+    (:4 (make-instance 'tut-4))
+    (:5 (make-instance 'tut-5))
+    (:6 (make-instance 'tut-6))
+    (:7 (make-instance 'tut-7))
+    (:8 (make-instance 'tut-8))
+    (:9 (make-instance 'tut-9))
+    (:10 (make-instance 'tut-10))
+    (:11 (make-instance 'tut-11))
+    (:12 (make-instance 'tut-12))
+    (:13 (make-instance 'tut-13))
+    (:14 (make-instance 'tut-14))
+    (:15 (make-instance 'tut-15))
+    (:16 (make-instance 'tut-16))
+    (:17 (make-instance 'tut-17))
+    (:18 (make-instance 'tut-18))
+    (:19 (make-instance 'tut-19))
+    (:20 (make-instance 'tut-20))))
+
+(defsketch sinewave ((title "Sinewave") (width 400) (height 400) (steps 0) (xs (/ width 5)) (r 3))
+  (incf steps)
+  (background (gray 0.2))
+  (flet ((sin-calc (x) (sin (* +tau+ (/ (+ (/ steps 4) x) xs)))))
+    (dotimes (x xs)
+      (with-pen (make-pen :fill +blue+ :stroke +black+)
+        (ngon
+          6
+          (* x (/ width xs))
+          (+ (/ height 2) (* (/ height 4) (sin-calc x)))
+          r r)
+        ; (ngon 6 (* x (/ w xs)) (+ (/ h 2) (* (/ h 4) (sin-calc (- x)))) r r)
+        ; (ngon 6 (* x (/ w xs)) (+ (/ h 2) (* (/ h 4) (- (sin-calc (- x))))) r r)
+        ; (ngon 6 (* x (/ w xs)) (+ (/ h 2) (* (/ h 4) (- (sin-calc x)))) r r)
+        ))))
