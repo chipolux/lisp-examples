@@ -7,11 +7,11 @@
 (defparameter *center-x* (/ *width* 2))
 (defparameter *center-y* (/ *height* 2))
 
-(defparameter *speed* 0.01)
+(defparameter *speed* 0.03)
 (defparameter *radius* 100)
 
 (defparameter *x-radius* 100)
-(defparameter *y-radius* 200)
+(defparameter *y-radius* 175)
 
 (defsketch ep4-circular ((title "Episode 4 - Circular") (width *width*) (height *height*) (angle 0))
   (incf angle *speed*)
