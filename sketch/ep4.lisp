@@ -43,7 +43,19 @@
   (let ((x (+ (* (cos x-angle) *radius*) *center-x*))
         (y (+ (* (sin y-angle) *radius*) *center-y*)))
     (circle x y 10)))
+
+(defsketch ep4-layout ((title "Episode 4 - Layout")
+                       (width *width*)
+                       (height *height*)
+                       (obj-count 10)
+                       (slice (/ (* pi 2) obj-count)))
+  (dotimes (i obj-count)
+    (let ((x (+ (* (cos (* i slice)) *radius*) *center-x*))
+          (y (+ (* (sin (* i slice)) *radius*) *center-y*)))
+      (circle x y 10))))
+
         
 (make-instance 'ep4-circular)
 (make-instance 'ep4-elliptical)
 (make-instance 'ep4-lissajous)
+(make-instance 'ep4-layout)
