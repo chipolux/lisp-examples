@@ -6,3 +6,4 @@ Ep3: ep3.lisp, more trig, animating based on sine waves.
 Ep4: ep4.lisp, circles, lissajouse, how sin and cos make circles and animating using them.
 Ep5: ep5.lisp, atan, using arc tangent to angle an object at another object.
 Ep6: No script, just some basic theory about vectors.
+Ep7: ep7.lisp, add some vector types.
