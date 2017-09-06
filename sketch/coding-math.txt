@@ -1,0 +1,8 @@
+Coding Math: https://www.youtube.com/playlist?list=PL7wAPgl1JVvUEb0dIygHzO4698tmcwLk9
+
+Ep1: No script, just an introduction.
+Ep2: ep2.lisp, basic trig, drawing a sine wave.
+Ep3: ep3.lisp, more trig, animating based on sine waves.
+Ep4: ep4.lisp, circles, lissajouse, how sin and cos make circles and animating using them.
+Ep5: ep5.lisp, atan, using arc tangent to angle an object at another object.
+Ep6: No script, just some basic theory about vectors.
