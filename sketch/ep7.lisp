@@ -18,8 +18,14 @@
 
 
 (defclass vector2 ()
-  ((x :initarg :x)
-   (y :initarg :y)))
+  ((x :initarg :x
+      :initform 0)
+   (y :initarg :y
+      :initform 0)))
+
+(defmethod initialize-instance :after ((vec vector2) &key length angle)
+  (if length (set-length vec length))
+  (if angle (set-angle vec angle)))
 
 (defmethod get-x ((vec vector2))
   (slot-value vec 'x))
@@ -99,3 +105,7 @@
        (vec2 (multiply vec1 2)))
   (format t "Length 1: ~a~%" (get-length vec1))
   (format t "Length 2: ~a~%" (get-length vec2)))
+
+(format t "~%Vector, Angle pi / 6, Length 3:~%")
+(let ((vec (make-instance 'vector2 :angle (/ pi 6) :length 3)))
+  (show vec))
