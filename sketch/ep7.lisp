@@ -10,6 +10,7 @@
            :get-length
            :set-length
            :add
+           :add!
            :subtract
            :multiply
            :divide))
@@ -62,6 +63,12 @@
 (defmethod add ((vec1 vector2) vec2)
   (let ((x1 (get-x vec1)) (y1 (get-y vec1)) (x2 (get-x vec2)) (y2 (get-y vec2)))
     (make-instance 'vector2 :x (+ x1 x2) :y (+ y1 y2))))
+
+(defmethod add! ((vec1 vector2) vec2)
+  (let ((x1 (get-x vec1)) (y1 (get-y vec1)) (x2 (get-x vec2)) (y2 (get-y vec2)))
+    (set-x vec1 (+ x1 x2))
+    (set-y vec1 (+ y1 y2)))
+  vec1)
 
 (defmethod subtract ((vec1 vector2) vec2)
   (let ((x1 (get-x vec1)) (y1 (get-y vec1)) (x2 (get-x vec2)) (y2 (get-y vec2)))
