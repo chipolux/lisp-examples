@@ -1,5 +1,5 @@
 (defpackage :ep8
-  (:use :cl :sketch :ep7))
+  (:use :cl :sketch :vector))
 (in-package :ep8)
 
 (defparameter *width* 400)
