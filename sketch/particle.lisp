@@ -17,7 +17,7 @@
     (setf (slot-value p 'gravity) (make-instance 'vector2 :x 0 :y 0))))
 
 (defmethod update ((p particle))
-  (add! (slot-value p 'position) (slot-value p 'gravity))
+  (add! (slot-value p 'velocity) (slot-value p 'gravity))
   (add! (slot-value p 'position) (slot-value p 'velocity)))
 
 (defmethod accelerate ((p particle) accel)

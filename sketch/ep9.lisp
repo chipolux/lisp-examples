@@ -30,7 +30,7 @@
   (if accel (accelerate particle accel))
   (update particle)
   (with-slots (position) particle
-    (circle (get-x position) (get-y position) 10)))
+    (circle (get-x position) (get-y position) 5)))
 
 (defsketch ep9-ball ((title "Episode 9 - Ball") (width *width*) (height *height*))
   (process-particle *particle* *accel*))
