@@ -21,13 +21,13 @@
       (line 10 0 5 5)
       (line 10 0 5 -5))))
 
-(defsketch ep5-static-arrow ((title "Episode 5 - Static Arrow") (width *width*) (height *height*))
+(defsketch ep5-static-arrow ((title "Episode 5.1 - Static Arrow") (width *width*) (height *height*))
   (draw-arrow *center-x* *center-y* (degrees *static-angle*)))
 
 (defmethod kit.sdl2:mousemotion-event ((win ep5-static-arrow) timestamp mask x y xrel yrel)
   (setf *static-angle* (atan (- y *center-y*) (- x *center-x*))))
 
-(defsketch ep5-mobile-arrow ((title "Episode 5 - Mobile Arrow")
+(defsketch ep5-mobile-arrow ((title "Episode 5.2 - Mobile Arrow")
                                (width *width*)
                                (height *height*)
                                (angle 0))

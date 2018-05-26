@@ -13,7 +13,7 @@
 (defparameter *x-radius* 100)
 (defparameter *y-radius* 175)
 
-(defsketch ep4-circular ((title "Episode 4 - Circular")
+(defsketch ep4-circular ((title "Episode 4.1 - Circular")
                          (width *width*)
                          (height *height*)
                          (angle 0))
@@ -22,7 +22,7 @@
         (y (+ (* (sin angle) *radius*) *center-y*)))
     (circle x y 10)))
 
-(defsketch ep4-elliptical ((title "Episode 4 - Elliptical")
+(defsketch ep4-elliptical ((title "Episode 4.2 - Elliptical")
                            (width *width*)
                            (height *height*)
                            (angle 0))
@@ -31,7 +31,7 @@
         (y (+ (* (sin angle) *y-radius*) *center-y*)))
     (circle x y 10)))
 
-(defsketch ep4-lissajous ((title "Episode 4 - Lissajous")
+(defsketch ep4-lissajous ((title "Episode 4.3 - Lissajous")
                            (width *width*)
                            (height *height*)
                            (x-angle 0)
@@ -44,7 +44,7 @@
         (y (+ (* (sin y-angle) *radius*) *center-y*)))
     (circle x y 10)))
 
-(defsketch ep4-layout ((title "Episode 4 - Layout")
+(defsketch ep4-layout ((title "Episode 4.4 - Layout")
                        (width *width*)
                        (height *height*)
                        (obj-count 10)

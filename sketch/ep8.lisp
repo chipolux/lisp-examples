@@ -22,16 +22,16 @@
                                  :direction (* (random 1.0) pi 2)) *particles*))
 
 
-(defsketch ep8-velocity-position ((title "Episode 8 - Velocity & Position") (width *width*) (height *height*))
+(defsketch ep8-velocity-position ((title "Episode 8.1 - Velocity & Position") (width *width*) (height *height*))
   (add! *position* *velocity*)
   (circle (get-x *position*) (get-y *position*) 20))
 
-(defsketch ep8-particle ((title "Episode 8 - Particle") (width *width*) (height *height*))
+(defsketch ep8-particle ((title "Episode 8.2 - Particle") (width *width*) (height *height*))
   (update *particle*)
   (with-slots (position) *particle*
     (circle (get-x position) (get-y position) 20)))
 
-(defsketch ep8-particles ((title "Episode 8 - Particles") (width *width*) (height *height*))
+(defsketch ep8-particles ((title "Episode 8.3 - Particles") (width *width*) (height *height*))
   (loop for particle in *particles*
         do (process-particle particle)))
 

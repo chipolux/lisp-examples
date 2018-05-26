@@ -3,7 +3,7 @@
 
 (in-package :ep2)
 
-(defsketch ep2 ((title "Episode 2") (width 1280) (height 720))
+(defsketch ep2 ((title "Episode 2.1 - Sine Wave") (width 1280) (height 720))
   (translate 0 (/ height 2))
   (scale 1 -1)
   (with-pen (make-pen :fill +black+)

@@ -32,15 +32,15 @@
   (with-slots (position) particle
     (circle (get-x position) (get-y position) 5)))
 
-(defsketch ep9-ball ((title "Episode 9 - Ball") (width *width*) (height *height*))
+(defsketch ep9-ball ((title "Episode 9.1 - Ball") (width *width*) (height *height*))
   (process-particle *particle* *accel*))
 
-(defsketch ep9-fireworks ((title "Episode 9 - Fireworks")
+(defsketch ep9-fireworks ((title "Episode 9.2 - Fireworks")
                           (width *width*) (height *height*)
                           (particles (loop repeat 100 collect (make-particle))))
   (loop for particle in particles do (process-particle particle *gravity*)))
 
-(defsketch ep9-fireworks2 ((title "Episode 9 - Fireworks 2")
+(defsketch ep9-fireworks2 ((title "Episode 9.3 - Fireworks 2")
                           (width *width*) (height *height*)
                           (particles (loop repeat 100 collect (make-particle-with-gravity))))
   (loop for particle in particles do (process-particle particle)))
