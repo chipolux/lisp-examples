@@ -9,6 +9,12 @@ I also like [SBCL](http://www.sbcl.org/) for another workhorse CL implementation
 and [CLISP](https://clisp.sourceforge.io/) is good when I need some auto-complete
 and friendlier error messages.
 
+I would recommend, if you're just starting to learn lisp, that you start out
+using CLISP since it'll tab complete lots of stuff for you and if you keep
+tabbing or ask it it'll open up the web docs for you. For the other
+implementations you'll want to grab [rlwrap](https://github.com/hanslub42/rlwrap)
+and use it so you can get a few modern REPL features and behaviour.
+
 If you want to try out some off this just grab the right Clozure CL for your system
 then get [Quicklisp](https://www.quicklisp.org/beta/) and set it up, I've also
 got a copy in the `tools` directory. Then just follow any instructions in the
