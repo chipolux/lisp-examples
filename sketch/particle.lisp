@@ -1,6 +1,6 @@
 (defpackage :particle
   (:use :cl :vector)
-  (:export :particle :update :accelerate))
+  (:export :particle :update :accelerate :set-position :set-velocity))
 (in-package :particle)
 
 
@@ -22,3 +22,11 @@
 
 (defmethod accelerate ((p particle) accel)
   (add! (slot-value p 'velocity) accel))
+
+(defmethod set-position ((p particle) x y)
+  (set-x (slot-value p 'position) x)
+  (set-y (slot-value p 'position) y))
+
+(defmethod set-velocity ((p particle) speed direction)
+  (set-length (slot-value p 'velocity) speed)
+  (set-angle (slot-value p 'velocity) direction))
