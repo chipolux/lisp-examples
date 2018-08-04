@@ -1,11 +1,12 @@
 Coding Math: https://www.youtube.com/playlist?list=PL7wAPgl1JVvUEb0dIygHzO4698tmcwLk9
 
-Ep1: No script, just an introduction.
-Ep2: ep2.lisp, basic trig, drawing a sine wave.
-Ep3: ep3.lisp, more trig, animating based on sine waves.
-Ep4: ep4.lisp, circles, lissajouse, how sin and cos make circles and animating using them.
-Ep5: ep5.lisp, atan, using arc tangent to angle an object at another object.
-Ep6: No script, just some basic theory about vectors.
-Ep7: ep7.lisp, vector.lisp, add some vector types.
-Ep8: ep8.lisp, particle.lisp, add a particle type that handles a position and velocity vector.
-Ep9: ep9.lisp, create and accelerate our particles to make fireworks.
+Ep  1: No script, just an introduction.
+Ep  2: ep02.lisp, basic trig, drawing a sine wave.
+Ep  3: ep03.lisp, more trig, animating based on sine waves.
+Ep  4: ep04.lisp, circles, lissajouse, how sin and cos make circles and animating using them.
+Ep  5: ep05.lisp, atan, using arc tangent to angle an object at another object.
+Ep  6: No script, just some basic theory about vectors.
+Ep  7: ep07.lisp, vector.lisp, add some vector types.
+Ep  8: ep08.lisp, particle.lisp, add a particle type that handles a position and velocity vector.
+Ep  9: ep09.lisp, create and accelerate our particles to make fireworks.
+Ep 10: ep10.lisp, handle a thrust vector and flight angle.
