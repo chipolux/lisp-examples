@@ -6,4 +6,6 @@ Ep3: ep3.lisp, more trig, animating based on sine waves.
 Ep4: ep4.lisp, circles, lissajouse, how sin and cos make circles and animating using them.
 Ep5: ep5.lisp, atan, using arc tangent to angle an object at another object.
 Ep6: No script, just some basic theory about vectors.
-Ep7: ep7.lisp, add some vector types.
+Ep7: ep7.lisp, vector.lisp, add some vector types.
+Ep8: ep8.lisp, particle.lisp, add a particle type that handles a position and velocity vector.
+Ep9: ep9.lisp, create and accelerate our particles to make fireworks.
