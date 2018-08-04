@@ -26,14 +26,36 @@
   (add! *position* *velocity*)
   (circle (get-x *position*) (get-y *position*) 20))
 
+(defmethod kit.sdl2:mousebutton-event ((win ep8-velocity-position) state ts b x y)
+  (when (eq state :mousebuttondown)
+    (set-x *position* 100)
+    (set-y *position* 100)))
+
+
 (defsketch ep8-particle ((title "Episode 8.2 - Particle") (width *width*) (height *height*))
   (update *particle*)
   (with-slots (position) *particle*
     (circle (get-x position) (get-y position) 20)))
 
+(defmethod kit.sdl2:mousebutton-event ((win ep8-particle) state ts b x y)
+  (when (eq state :mousebuttondown)
+    (reset-particle *particle*)))
+
+
 (defsketch ep8-particles ((title "Episode 8.3 - Particles") (width *width*) (height *height*))
   (loop for particle in *particles*
         do (process-particle particle)))
+
+(defmethod kit.sdl2:mousebutton-event ((win ep8-particles) state ts b x y)
+  (when (eq state :mousebuttondown)
+    (loop for particle in *particles*
+          do (reset-particle particle))))
+
+
+(defun reset-particle (particle)
+  (with-slots (position) particle
+    (set-x position 100)
+    (set-y position 100)))
 
 (defun process-particle (particle)
   (update particle)
