@@ -32,18 +32,40 @@
   (with-slots (position) particle
     (circle (get-x position) (get-y position) 5)))
 
+(defun reset-particle (particle)
+  (set-position particle (/ *width* 2) (/ *height* 3))
+  (set-velocity particle (+ (* (random 1.0) 5) 2) (* (random 1.0) pi 2)))
+
+
 (defsketch ep9-ball ((title "Episode 9.1 - Ball") (width *width*) (height *height*))
   (process-particle *particle* *accel*))
+
+(defmethod kit.sdl2:mousebutton-event ((win ep9-ball) state ts b x y)
+  (when (eq state :mousebuttondown)
+    (set-position *particle* 0 *height*)
+    (set-velocity *particle* 10 (- (radians 90)))))
+
 
 (defsketch ep9-fireworks ((title "Episode 9.2 - Fireworks")
                           (width *width*) (height *height*)
                           (particles (loop repeat 100 collect (make-particle))))
   (loop for particle in particles do (process-particle particle *gravity*)))
 
+(defmethod kit.sdl2:mousebutton-event ((win ep9-fireworks) state ts b x y)
+  (when (eq state :mousebuttondown)
+    (with-slots (particles) win
+      (loop for particle in particles do (reset-particle particle)))))
+
+
 (defsketch ep9-fireworks2 ((title "Episode 9.3 - Fireworks 2")
                           (width *width*) (height *height*)
                           (particles (loop repeat 100 collect (make-particle-with-gravity))))
   (loop for particle in particles do (process-particle particle)))
+
+(defmethod kit.sdl2:mousebutton-event ((win ep9-fireworks2) state ts b x y)
+  (when (eq state :mousebuttondown)
+    (with-slots (particles) win
+      (loop for particle in particles do (reset-particle particle)))))
 
 
 (make-instance 'ep9-ball)
