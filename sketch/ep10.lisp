@@ -7,13 +7,22 @@
 
 
 (defparameter *width* 800)
-(defparameter *height* 800)
+(defparameter *height* 600)
 (defparameter *ship* (make-instance 'particle :x (/ *width* 2) :y (/ *height* 2) :speed 0 :direction 0))
 (defparameter *thrust* (make-instance 'vector2 :x 0 :y 0))
 (defparameter *angle* 0)
+(defparameter *turning* 0)  ; -1 = left, 1 = right
+(defparameter *thrusting* nil)
 
 
 (defun process-ship ()
+  (case *turning*
+    ((-1) (decf *angle* 0.05))
+    ((1) (incf *angle* 0.05)))
+  (set-angle *thrust* *angle*)
+  (if *thrusting*
+    (set-length *thrust* 0.1)
+    (set-length *thrust* 0))
   (accelerate *ship* *thrust*)
   (update *ship*)
   (with-slots (position) *ship*
@@ -28,7 +37,15 @@
 
 (defun draw-ship ()
   (with-slots (position) *ship*
-    (circle (get-x position) (get-y position) 10)))
+    (let ((x (get-x position)) (y (get-y position)))
+      (with-current-matrix
+        (translate x y)
+        (rotate (degrees *angle*))
+        (with-pen (make-pen :stroke +orange+)
+          (polyline 16 0 2 -4 2 -7 5 -10 -4 -12 -6 -10 -6 10 -4 12 5 10 2 7 2 4 16 0))
+        (if *thrusting*
+          (with-pen (make-pen :stroke +red+)
+            (polyline -6 -6 -13 -4 -10 -2 -16 0 -10 2 -13 4 -6 6)))))))
 
 
 (defsketch ep10 ((title "Episode 10") (width *width*) (height *height*))
@@ -40,16 +57,14 @@
     (let ((scancode (sdl2:scancode keysym)))
       (when (eq state :keydown)
         (case scancode
-          ((:scancode-w :scancode-up) (set-y *thrust* -0.1))
-          ((:scancode-s :scancode-down) (set-y *thrust* 0.1))
-          ((:scancode-a :scancode-left) (set-x *thrust* -0.1))
-          ((:scancode-d :scancode-right) (set-x *thrust* 0.1))))
+          ((:scancode-w :scancode-up) (setf *thrusting* t))
+          ((:scancode-a :scancode-left) (decf *turning*))
+          ((:scancode-d :scancode-right) (incf *turning*))))
       (when (eq state :keyup)
         (case scancode
-          ((:scancode-w :scancode-up) (set-y *thrust* 0))
-          ((:scancode-s :scancode-down) (set-y *thrust* 0))
-          ((:scancode-a :scancode-left) (set-x *thrust* 0))
-          ((:scancode-d :scancode-right) (set-x *thrust* 0)))))))
+          ((:scancode-w :scancode-up) (setf *thrusting* nil))
+          ((:scancode-a :scancode-left) (incf *turning*))
+          ((:scancode-d :scancode-right) (decf *turning*)))))))
 
 
 (make-instance 'ep10)
