@@ -12,3 +12,5 @@ Finally: (ql:quickload :sketch)
 
 I've kept a copy of the dlls you need on windows in this repo as libs.zip
 so you don't have to download everything if you're working on 64bit Win10.
+
+On linux you'll need to install libffi-dev and libsdl2-dev.
