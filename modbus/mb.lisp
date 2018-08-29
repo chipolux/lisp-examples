@@ -78,7 +78,7 @@
       (format t "> connection accepted~%")
       (process-run-function "mb-client" (lambda () (handle-client s))))))
 
-(defun read-register (host address &key (quantity 1) (unit 0) (port 6502))
+(defun read-registers (host address &key (quantity 1) (unit #xFF) (port 6502))
   "Reads holding registers."
   (with-open-socket (s :type :stream
                        :connect :active
@@ -92,6 +92,6 @@
     (write-int 2 0 s)           ; protocol id
     (write-int 2 6 s)           ; message size
     (write-byte unit s)         ; unit id
-    (write-byte 3 s)            ; function code (read holding registers
+    (write-byte 3 s)            ; function code (3, read holding registers)
     (write-int 2 address s)     ; starting address
     (write-int 2 quantity s)))  ; quantity of registers
