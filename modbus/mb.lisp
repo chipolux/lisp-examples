@@ -1,5 +1,14 @@
 ;;; A Simple MODBUS TCP Server and Client Implementation for Clozure CL
 
+(defpackage :mb
+  (:use :common-lisp :ccl)
+  (:export
+    :bytes->int
+    :int->bytes
+    :make-server
+    :read-registers))
+(in-package :mb)
+
 (defparameter *t-id* 0)
 
 (defun bytes->int (bytes)
