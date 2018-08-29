@@ -1,5 +1,6 @@
 ;;; A Simple MODBUS TCP Server and Client Implementation for Clozure CL
 
+(defparameter *t-id* 0)
 
 (defun bytes->int (bytes)
   "Converts a list of bytes into an integer. (big-endian)"
@@ -88,7 +89,8 @@
                        :output-timeout 1
                        :connect-timeout 2)
     (format t "> connection established~%")
-    (write-int 2 4242 s)        ; transaction id
+    (setf *t-id* (mod (1+ *t-id*) #xFFFF))
+    (write-int 2 *t-id* s)      ; transaction id
     (write-int 2 0 s)           ; protocol id
     (write-int 2 6 s)           ; message size
     (write-byte unit s)         ; unit id
