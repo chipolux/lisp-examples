@@ -52,3 +52,6 @@ specific folders.
     * a couple of small experiements creating webservers in Lisp using
       [Hunchentoot](https://edicl.github.io/hunchentoot/) and
       [Wookie](http://wookie.lyonbros.com/)
+* `modbus`
+    * my lisp implementation of the MODBUS TCP specification.
+    * currently only for Clozure CL, since it runs on ARM.
