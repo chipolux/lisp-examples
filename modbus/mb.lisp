@@ -21,28 +21,62 @@
   "Writes an integer as 'size' bytes to the provided stream. (big-endian)"
   (loop for b in (int->bytes size int) do (write-byte b stream)))
 
-(defun make-server (&key (host "localhost") (port 6502))
+(defun read-mbap (stream)
+  "Reads the ModBus Application Protocol header from provided stream."
+  (values
+    (read-int 2 stream)       ; transaction id
+    (read-int 2 stream)       ; protocol id
+    (- (read-int 2 stream) 2) ; size (adjusted because we also read the unit id and function code)
+    (read-byte stream)        ; unit id
+    (read-byte stream)))      ; function code
+
+(defun handle-client (s)
+  "Handle a modbus client connection stream."
+  (handler-case
+    (loop for (t-id p-id size u-id f-code) = (multiple-value-list (read-mbap s)) do
+      (format t "> new message~%")
+      (format t "  transaction id: ~d~%" t-id)
+      (format t "  protocol id:    ~d~%" p-id)
+      (format t "  size:           ~d~%" size)
+      (format t "  unit id:        ~d~%" u-id)
+      (format t "  function code:  ~d~%" f-code)
+      (format t "  rest:           ~{~2,'0x~^ ~}~%" (loop repeat size collect (read-byte s)))
+      (finish-output)
+      (write-int 2 t-id s)
+      (write-int 2 p-id s)
+      (write-int 2 3 s)  ; response size
+      (write-byte u-id s)
+      ; send error response (4, server error)
+      (write-byte (+ #x80 f-code) s)
+      (write-byte #x04 s)
+      ; send success response with dummy data
+      ; (write-byte f-code s)
+      ; (write-byte 2 s)  ; count of register value bytes
+      ; (write-int 2 #xFFFF s)
+      (finish-output s))
+    (socket-error (c)
+      (format t "> socket error: ~a~%" c))
+    (end-of-file ()
+      (format t "> stream closed by client~%"))
+    ((or input-timeout output-timeout) ()
+      (format t "> closing due to inactivity~%")))
+  (close s))
+
+(defun make-server (&key (port 6502) (remote-access nil))
   "Starts a simple modbus server."
   (with-open-socket (socket :type :stream
                             :connect :passive
-                            :local-host host
+                            :local-host (if remote-access "0.0.0.0" "localhost")
                             :local-port port
                             :reuse-address t
-                            :input-timeout 1
-                            :output-timeout 1
-                            :connect-timeout 2)
-    (format t "> server started ~a:~a~%" host port)
+                            :input-timeout 30
+                            :output-timeout 30
+                            :connect-timeout 3
+                            :keepalive t)
+    (format t "> server started on ~a~%" port)
     (loop for s = (accept-connection socket :wait t) do
       (format t "> connection accepted~%")
-      (format t "  transaction id: ~d~%" (read-int 2 s))
-      (format t "  protocol id:    ~d~%" (read-int 2 s))
-      (format t "  size:           ~d~%" (read-int 2 s))
-      (format t "  unit id:        ~d~%" (read-byte s))
-      (format t "  function code:  ~d~%" (read-byte s))
-      (format t "  address:        ~d~%" (read-int 2 s))
-      (format t "  quantity:       ~d~%" (read-int 2 s))
-      (finish-output))))
-
+      (process-run-function "mb-client" (lambda () (handle-client s))))))
 
 (defun read-register (host address &key (quantity 1) (unit 0) (port 6502))
   "Reads holding registers."
