@@ -1,31 +1,12 @@
 ;; Load required libraries.
-(require :sdl2)
-(require :cl-opengl)
+(ql:quickload :sdl2)
+(ql:quickload :cl-opengl)
 
 (defun debug-log (msg &rest args)
   "Output and flush MSG to STDOUT with arguments ARGS"
   (apply #'format t msg args)
   ;; Flush to standard out
   (finish-output))
- 
-(defun main ()
-  "The entry point of our game."
-  (sdl2:with-init
-    (:everything)
-    (debug-log "Using SDL library version: ~D.~D.~D~%"
-               sdl2-ffi:+sdl-major-version+
-               sdl2-ffi:+sdl-minor-version+
-               sdl2-ffi:+sdl-patchlevel+)
-
-    (sdl2:with-window
-      (win :flags '(:shown :opengl))
-      (sdl2:with-gl-context
-        (gl-context win)
-        ;; Basic window/gl setup
-        (setup-gl win gl-context)
-
-        ;; Run main loop
-        (main-loop win #'render)))))
 
 (defun setup-gl (win gl-context)
   "Setup OpenGL with the window WIN and the gl context of GL-CONTEXT"
@@ -60,3 +41,26 @@
            ;; Swap back buffer
            (sdl2:gl-swap-window win))
     (:quit () t)))
+ 
+(defun main ()
+  "The entry point of our game."
+  (sdl2:with-init
+    (:everything)
+    (debug-log "Using SDL library version: ~D.~D.~D~%"
+               sdl2-ffi:+sdl-major-version+
+               sdl2-ffi:+sdl-minor-version+
+               sdl2-ffi:+sdl-patchlevel+)
+
+    (sdl2:with-window
+      (win :flags '(:shown :opengl))
+      (sdl2:with-gl-context
+        (gl-context win)
+        ;; Basic window/gl setup
+        (setup-gl win gl-context)
+
+        ;; Run main loop
+        (main-loop win #'render)))))
+
+(defun run ()
+  #-sbcl (main)
+  #+sbcl (sdl2:make-this-thread-main #'main))

@@ -1,5 +1,5 @@
-(require :sdl2)
-(require :cl-opengl)
+(ql:quickload :sdl2)
+(ql:quickload :cl-opengl)
 
 (defun format-now (msg &rest args)
   "Output and flush MSG to STDOUT with arguments ARGS"
@@ -97,3 +97,7 @@
              do (progn
                   (sdl2:game-controller-close controller)
                   (sdl2:haptic-close (cdr (assoc i haptic))))))))))
+
+(defun run ()
+  #-sbcl (basic-test)
+  #+sbcl (sdl2:make-this-thread-main #'basic-test))
