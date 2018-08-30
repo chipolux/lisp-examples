@@ -49,7 +49,7 @@
            ;; Swap back buffer
            (sdl2:gl-swap-window win))
     (:quit () t)))
- 
+
 (defun main ()
   "The entry point of our game."
   (sdl2:with-init
