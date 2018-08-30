@@ -36,6 +36,14 @@
   render function RENDER-FN, amongst others."
   (sdl2:with-event-loop
     (:method :poll)
+    (:keydown (:keysym keysym)
+      (when (sdl2:scancode= (sdl2:scancode-value keysym) :scancode-w)
+        (gl:polygon-mode :front-and-back :line)))
+    (:keyup (:keysym keysym)
+      (when (sdl2:scancode= (sdl2:scancode-value keysym) :scancode-w)
+        (gl:polygon-mode :front-and-back :fill))
+      (when (sdl2:scancode= (sdl2:scancode-value keysym) :scancode-escape)
+        (sdl2:push-event :quit)))
     (:idle ()
            (funcall render-fn)
            ;; Swap back buffer
