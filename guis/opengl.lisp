@@ -2,72 +2,63 @@
 (ql:quickload :sdl2)
 (ql:quickload :cl-opengl)
 
+(defparameter *width* 800)
+(defparameter *height* 600)
+(defparameter *wireframe* nil)
+
 (defun debug-log (msg &rest args)
   "Output and flush MSG to STDOUT with arguments ARGS"
   (apply #'format t msg args)
-  ;; Flush to standard out
   (finish-output))
 
 (defun setup-gl (win gl-context)
-  "Setup OpenGL with the window WIN and the gl context of GL-CONTEXT"
-  (debug-log "Setting up window/gl.~%")
   (sdl2:gl-make-current win gl-context)
-  (gl:viewport 0 0 800 600)
+  (gl:viewport 0 0 *width* *height*)
   (gl:matrix-mode :projection)
-  (gl:ortho -2 2 -2 2 -2 2)
+  (gl:ortho -1 1 -1 1 -1 1)
   (gl:matrix-mode :modelview)
   (gl:load-identity)
-  ;; Clear to black
-  (gl:clear-color 0.0 0.0 0.0 1.0))
+  (gl:clear-color 0.3 0.3 0.3 1))
 
-(defun render ()
-  (gl:clear :color-buffer)
-  ;; Draw a demo triangle
-  (gl:begin :triangles)
-  (gl:color 1.0 0.0 0.0)
-  (gl:vertex 0.0 1.0)
-  (gl:vertex -1.0 -1.0)
-  (gl:vertex 1.0 -1.0)
-  (gl:end)
-  (gl:flush))
+(defun draw-centered-triangle (delta)
+  (declare (ignore delta))
+  (let ((size (* (sin (/ (sdl2:get-ticks) 500)) 0.5)))
+    (gl:clear :color-buffer)
+    (gl:begin :triangles)
+    (gl:color 0.8 0.4 0)
+    (gl:vertex 0 size)
+    (gl:vertex (- size) (- size))
+    (gl:vertex size (- size))
+    (gl:end)
+    (gl:flush)))
 
 (defun main-loop (win render-fn)
-  "Run the game loop that handles input, rendering through the
-  render function RENDER-FN, amongst others."
-  (sdl2:with-event-loop
-    (:method :poll)
-    (:keydown (:keysym keysym)
-      (when (sdl2:scancode= (sdl2:scancode-value keysym) :scancode-w)
-        (gl:polygon-mode :front-and-back :line)))
-    (:keyup (:keysym keysym)
-      (when (sdl2:scancode= (sdl2:scancode-value keysym) :scancode-w)
-        (gl:polygon-mode :front-and-back :fill))
-      (when (sdl2:scancode= (sdl2:scancode-value keysym) :scancode-escape)
-        (sdl2:push-event :quit)))
-    (:idle ()
-           (funcall render-fn)
-           ;; Swap back buffer
-           (sdl2:gl-swap-window win))
-    (:quit () t)))
+  (let ((ticks (sdl2:get-ticks)))
+    (sdl2:with-event-loop (:method :poll)
+      (:keydown (:keysym keysym :repeat repeat)
+        (debug-log "KEYDOWN: ~a, ~a~%" (sdl2:scancode keysym) repeat)
+        (when (sdl2:scancode= (sdl2:scancode-value keysym) :scancode-w)
+          (setf *wireframe* (not *wireframe*))
+          (if *wireframe*
+            (gl:polygon-mode :front-and-back :line)
+            (gl:polygon-mode :front-and-back :fill))))
+      (:keyup (:keysym keysym)
+        (debug-log "KEYUP ~a~%" (sdl2:scancode keysym))
+        (when (sdl2:scancode= (sdl2:scancode-value keysym) :scancode-escape)
+          (sdl2:push-event :quit)))
+      (:idle ()
+        (funcall render-fn (/ (- (sdl2:get-ticks) ticks) 1000))
+        (setf ticks (sdl2:get-ticks))
+        (sdl2:gl-swap-window win))
+      (:quit () t))))
 
 (defun main ()
-  "The entry point of our game."
-  (sdl2:with-init
-    (:everything)
-    (debug-log "Using SDL library version: ~D.~D.~D~%"
-               sdl2-ffi:+sdl-major-version+
-               sdl2-ffi:+sdl-minor-version+
-               sdl2-ffi:+sdl-patchlevel+)
-
-    (sdl2:with-window
-      (win :flags '(:shown :opengl))
-      (sdl2:with-gl-context
-        (gl-context win)
-        ;; Basic window/gl setup
+  (sdl2:with-init (:everything)
+    (multiple-value-call #'debug-log "SDL Version: ~d.~d.~d~%" (sdl2:version))
+    (sdl2:with-window (win :title "CL OpenGL Test" :flags '(:shown :opengl))
+      (sdl2:with-gl-context (gl-context win)
         (setup-gl win gl-context)
-
-        ;; Run main loop
-        (main-loop win #'render)))))
+        (main-loop win #'draw-centered-triangle)))))
 
 (defun run ()
   #-sbcl (main)
