@@ -105,4 +105,14 @@
     (write-byte unit s)         ; unit id
     (write-byte 3 s)            ; function code (3, read holding registers)
     (write-int 2 address s)     ; starting address
-    (write-int 2 quantity s)))  ; quantity of registers
+    (write-int 2 quantity s)    ; quantity of registers
+    (finish-output s)
+    (multiple-value-bind (t-id p-id size u-id f-code) (read-mbap s)
+      (format t "> response:~%")
+      (format t "  transaction id: ~d~%" t-id)
+      (format t "  protocol id:    ~d~%" p-id)
+      (format t "  size:           ~d~%" size)
+      (format t "  unit id:        ~d~%" u-id)
+      (format t "  function code:  ~d~%" f-code)
+      (format t "  rest:           ~{~2,'0x~^ ~}~%"
+              (loop repeat size collect (read-byte s))))))
