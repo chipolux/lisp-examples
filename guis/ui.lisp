@@ -25,3 +25,7 @@
             (sdl2:render-present renderer)
 	        (sdl2:delay 33))
           (:quit () t))))))
+
+(defun run ()
+  #-sbcl (ui)
+  #+sbcl (sdl2:make-this-thread-main #'ui))
