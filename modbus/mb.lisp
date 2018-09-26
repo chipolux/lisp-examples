@@ -1,7 +1,7 @@
 ;;; A Simple MODBUS TCP Server and Client Implementation for Clozure CL
 
 (defpackage :mb
-  (:use :common-lisp :ccl)
+  (:use :common-lisp)
   (:export
     :bytes->int
     :int->bytes
@@ -74,29 +74,22 @@
 
 (defun make-server (&key (port 6502) (remote-access nil))
   "Starts a simple modbus server."
-  (with-open-socket (socket :type :stream
-                            :connect :passive
-                            :local-host (if remote-access "0.0.0.0" "localhost")
-                            :local-port port
-                            :reuse-address t
-                            :input-timeout 30
-                            :output-timeout 30
-                            :connect-timeout 3
-                            :keepalive t)
+  (ccl:with-open-socket (socket :type :stream
+                                :connect :passive
+                                :local-host (if remote-access "0.0.0.0" "localhost")
+                                :local-port port
+                                :reuse-address t
+                                :input-timeout 30
+                                :output-timeout 30
+                                :connect-timeout 3
+                                :keepalive t)
     (format t "> server started on ~a~%" port)
-    (loop for s = (accept-connection socket :wait t) do
+    (loop for s = (ccl:accept-connection socket :wait t) do
       (format t "> connection accepted~%")
-      (process-run-function "mb-client" (lambda () (handle-client s))))))
+      (ccl:process-run-function "mb-client" (lambda () (handle-client s))))))
 
 (defun read-registers (host address &key (quantity 1) (unit #xFF) (port 6502))
   "Reads holding registers."
-  (with-open-socket (s :type :stream
-                       :connect :active
-                       :remote-host host
-                       :remote-port port
-                       :input-timeout 1
-                       :output-timeout 1
-                       :connect-timeout 2)
     (format t "> connection established~%")
     (setf *t-id* (mod (1+ *t-id*) #xFFFF))
     (write-int 2 *t-id* s)      ; transaction id
@@ -106,6 +99,13 @@
     (write-byte 3 s)            ; function code (3, read holding registers)
     (write-int 2 address s)     ; starting address
     (write-int 2 quantity s)    ; quantity of registers
+  (ccl:with-open-socket (s :type :stream
+                           :connect :active
+                           :remote-host host
+                           :remote-port port
+                           :input-timeout 1
+                           :output-timeout 1
+                           :connect-timeout 2)
     (finish-output s)
     (multiple-value-bind (t-id p-id size u-id f-code) (read-mbap s)
       (format t "> response:~%")
