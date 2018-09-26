@@ -5,8 +5,10 @@
   (:export
     :bytes->int
     :int->bytes
+    :int->bits
     :make-server
-    :read-registers))
+    :read-registers
+    :read-coils))
 (in-package :mb)
 
 (defparameter *t-id* 0)
@@ -22,6 +24,10 @@
 (defun int->bytes (size int)
   "Converts an integer into a list of bytes. (big-endian)"
   (loop for p from (* 8 (1- size)) downto 0 by 8 collect (ldb (byte 8 p) int)))
+
+(defun int->bits (size int)
+  "Converts an integer into a list of bits."
+  (loop for p from (1- size) downto 0 collect (ldb (byte 1 p) int)))
 
 (defun read-int (size stream)
   "Reads an integer from 'size' bytes of the provided stream. (big-endian)"
@@ -57,7 +63,7 @@
       (format t "  protocol id:    ~d~%" p-id)
       (format t "  size:           ~d~%" size)
       (format t "  unit id:        ~d~%" u-id)
-      (format t "  function code:  ~d~%" f-code)
+      (format t "  function code:  ~2,'0x~%" f-code)
       (format t "  rest:           ~{~2,'0x~^ ~}~%" (loop repeat size collect (read-byte s)))
       (finish-output)
       (write-int 2 t-id s)
@@ -96,7 +102,7 @@
       (format t "> connection accepted~%")
       (ccl:process-run-function "mb-client" (lambda () (handle-client s))))))
 
-(defun read-registers (host address &key (quantity 1) (unit #xFF) (port 6502))
+(defun read-registers (host address &key (quantity 1) (unit-id #xFF) (port 6502))
   "Reads holding registers."
   (ccl:with-open-socket (s :type :stream
                            :connect :active
@@ -110,11 +116,30 @@
     (write-int 2 quantity s)
     (finish-output s)
     (multiple-value-bind (t-id p-id size u-id f-code) (read-mbap s)
-      (format t "> response:~%")
-      (format t "  transaction id: ~d~%" t-id)
-      (format t "  protocol id:    ~d~%" p-id)
-      (format t "  size:           ~d~%" size)
-      (format t "  unit id:        ~d~%" u-id)
-      (format t "  function code:  ~d~%" f-code)
-      (format t "  rest:           ~{~2,'0x~^ ~}~%"
-              (loop repeat size collect (read-byte s))))))
+      (declare (ignore size) (ignore u-id))
+      (cond
+        ((not (= t-id *t-id*)) (format t "> bad transaction id: ~d != ~d~%" t-id *t-id*))
+        ((not (= p-id 0)) (format t "> bad protocol id: ~d != 0~%" p-id))
+        ((> f-code #x80) (format t "> error code: ~2,'0x~%" (read-byte s)))
+        (t (loop repeat (/ (read-byte s) 2) collect (read-int 2 s)))))))
+
+(defun read-coils (host address &key (quantity 1) (unit-id #xFF) (port 6502))
+  "Reads coils."
+  (ccl:with-open-socket (s :type :stream
+                           :connect :active
+                           :remote-host host
+                           :remote-port port
+                           :input-timeout 1
+                           :output-timeout 1
+                           :connect-timeout 2)
+    (write-mbap s 4 unit-id #x01)
+    (write-int 2 address s)
+    (write-int 2 quantity s)
+    (finish-output s)
+    (multiple-value-bind (t-id p-id size u-id f-code) (read-mbap s)
+      (declare (ignore size) (ignore u-id))
+      (cond
+        ((not (= t-id *t-id*)) (format t "> bad transaction id: ~d != ~d~%" t-id *t-id*))
+        ((not (= p-id 0)) (format t "> bad protocol id: ~d != 0~%" p-id))
+        ((> f-code #x80) (format t "> error code: ~2,'0x~%" (read-byte s)))
+        (t (int->bits quantity (read-int (read-byte s) s)))))))
