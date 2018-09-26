@@ -44,9 +44,11 @@
       (sdl2:render-draw-points renderer points num))))
 
 (defun test-render-rect (renderer)
+  (sdl2:set-render-draw-color renderer 128 128 0 255)
   (sdl2:render-draw-rect renderer (sdl2:make-rect 400 400 35 35)))
 
 (defun test-render-rects (renderer)
+  (sdl2:set-render-draw-color renderer 128 0 128 255)
   (multiple-value-bind (rects num)
       (apply #'sdl2:rects*
              (loop :for x :upto 5
@@ -55,6 +57,7 @@
     (sdl2:render-draw-rects renderer rects num)))
 
 (defun test-render-fill-rect (renderer)
+  (sdl2:set-render-draw-color renderer 128 128 128 255)
   (sdl2:render-fill-rect renderer (sdl2:make-rect 445 400 35 35)))
 
 (defun test-render-fill-rects (renderer)
@@ -94,3 +97,7 @@
              (sdl2:render-present renderer)
 	         (sdl2:delay 33))
             (:quit () t)))))))
+
+(defun run ()
+  #-sbcl (renderer-test)
+  #+sbcl (sdl2:make-this-thread-main #'renderer-test))
