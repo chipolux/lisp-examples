@@ -40,6 +40,14 @@
     (read-byte stream)        ; unit id
     (read-byte stream)))      ; function code
 
+(defun write-mbap (stream size unit-id function-code)
+  (setf *t-id* (mod (1+ *t-id*) #xFFFF))
+  (write-int 2 *t-id* stream)
+  (write-int 2 0 stream)
+  (write-int 2 (+ 2 size) stream)
+  (write-byte unit-id stream)
+  (write-byte function-code stream))
+
 (defun handle-client (s)
   "Handle a modbus client connection stream."
   (handler-case
@@ -90,15 +98,6 @@
 
 (defun read-registers (host address &key (quantity 1) (unit #xFF) (port 6502))
   "Reads holding registers."
-    (format t "> connection established~%")
-    (setf *t-id* (mod (1+ *t-id*) #xFFFF))
-    (write-int 2 *t-id* s)      ; transaction id
-    (write-int 2 0 s)           ; protocol id
-    (write-int 2 6 s)           ; message size
-    (write-byte unit s)         ; unit id
-    (write-byte 3 s)            ; function code (3, read holding registers)
-    (write-int 2 address s)     ; starting address
-    (write-int 2 quantity s)    ; quantity of registers
   (ccl:with-open-socket (s :type :stream
                            :connect :active
                            :remote-host host
@@ -106,6 +105,9 @@
                            :input-timeout 1
                            :output-timeout 1
                            :connect-timeout 2)
+    (write-mbap s 4 unit-id #x03)
+    (write-int 2 address s)
+    (write-int 2 quantity s)
     (finish-output s)
     (multiple-value-bind (t-id p-id size u-id f-code) (read-mbap s)
       (format t "> response:~%")
