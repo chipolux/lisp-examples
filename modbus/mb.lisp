@@ -27,7 +27,7 @@
 
 (defun int->bits (size int)
   "Converts an integer into a list of bits."
-  (loop for p from (1- size) downto 0 collect (ldb (byte 1 p) int)))
+  (loop for p from 0 upto (1- size) collect (ldb (byte 1 p) int)))
 
 (defun read-int (size stream)
   "Reads an integer from 'size' bytes of the provided stream. (big-endian)"
@@ -142,4 +142,5 @@
         ((not (= t-id *t-id*)) (format t "> bad transaction id: ~d != ~d~%" t-id *t-id*))
         ((not (= p-id 0)) (format t "> bad protocol id: ~d != 0~%" p-id))
         ((> f-code #x80) (format t "> error code: ~2,'0x~%" (read-byte s)))
-        (t (int->bits quantity (read-int (read-byte s) s)))))))
+        (t (let ((bits (loop repeat (read-byte s) collect (int->bits 8 (read-byte s)))))
+             (subseq (apply #'append bits) 0 quantity)))))))
