@@ -13,7 +13,8 @@
            :add!
            :subtract
            :multiply
-           :divide))
+           :divide
+           :distance))
 
 (in-package :vector)
 
@@ -81,3 +82,7 @@
 (defmethod divide ((vec vector2) val)
   (let ((x (get-x vec)) (y (get-y vec)))
     (make-instance 'vector2 :x (/ x val) :y (/ y val))))
+
+(defmethod distance ((vec1 vector2) (vec2 vector2))
+  (let ((x1 (get-x vec1)) (y1 (get-y vec1)) (x2 (get-x vec2)) (y2 (get-y vec2)))
+    (sqrt (+ (expt (- x2 x1) 2) (expt (- y2 y1) 2)))))
