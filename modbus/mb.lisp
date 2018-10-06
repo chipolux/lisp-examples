@@ -12,6 +12,8 @@
 (in-package :mb)
 
 (defparameter *t-id* 0)
+(defparameter *max-connections* 5)
+(defparameter *connections* '())
 
 (defun bytes->int (bytes)
   "Converts a list of bytes into an integer. (big-endian)"
@@ -54,93 +56,86 @@
   (write-byte unit-id stream)
   (write-byte function-code stream))
 
-(defun handle-client (s)
+(defun handle-client (c)
   "Handle a modbus client connection stream."
-  (handler-case
-    (loop for (t-id p-id size u-id f-code) = (multiple-value-list (read-mbap s)) do
-      (format t "> new message~%")
-      (format t "  transaction id: ~d~%" t-id)
-      (format t "  protocol id:    ~d~%" p-id)
-      (format t "  size:           ~d~%" size)
-      (format t "  unit id:        ~d~%" u-id)
-      (format t "  function code:  ~2,'0x~%" f-code)
-      (format t "  rest:           ~{~2,'0x~^ ~}~%" (loop repeat size collect (read-byte s)))
-      (finish-output)
-      (write-int 2 t-id s)
-      (write-int 2 p-id s)
-      (write-int 2 3 s)  ; response size
-      (write-byte u-id s)
-      ; send error response (4, server error)
-      (write-byte (+ #x80 f-code) s)
-      (write-byte #x04 s)
-      ; send success response with dummy data
-      ; (write-byte f-code s)
-      ; (write-byte 2 s)  ; count of register value bytes
-      ; (write-int 2 #xFFFF s)
-      (finish-output s))
-    (socket-error (c)
-      (format t "> socket error: ~a~%" c))
-    (end-of-file ()
-      (format t "> stream closed by client~%"))
-    ((or input-timeout output-timeout) ()
-      (format t "> closing due to inactivity~%")))
-  (close s))
+  (let ((s (sb-bsd-sockets:socket-make-stream c :input t :output t :element-type :default)))
+    (handler-case
+      (loop for (t-id p-id size u-id f-code) = (multiple-value-list (read-mbap s)) do
+        (format t "> new message~%")
+        (format t "  transaction id: ~d~%" t-id)
+        (format t "  protocol id:    ~d~%" p-id)
+        (format t "  size:           ~d~%" size)
+        (format t "  unit id:        ~d~%" u-id)
+        (format t "  function code:  ~2,'0x~%" f-code)
+        (format t "  rest:           ~{~2,'0x~^ ~}~%" (loop repeat size collect (read-byte s)))
+        (finish-output)
+        (write-int 2 t-id s)
+        (write-int 2 p-id s)
+        (write-int 2 3 s)  ; response size
+        (write-byte u-id s)
+        ; send error response (4, server error)
+        (write-byte (+ #x80 f-code) s)
+        (write-byte #x04 s)
+        ; send success response with dummy data
+        ; (write-byte f-code s)
+        ; (write-byte 2 s)  ; count of register value bytes
+        ; (write-int 2 #xFFFF s)
+        (finish-output s))
+      (sb-sys:io-timeout ()
+        (format t "> client timed out~%"))
+      (end-of-file ()
+        (format t "> stream closed by client~%"))))
+  (sb-bsd-sockets:socket-close c))
 
 (defun make-server (&key (port 6502) (remote-access nil))
   "Starts a simple modbus server."
-  (ccl:with-open-socket (socket :type :stream
-                                :connect :passive
-                                :local-host (if remote-access "0.0.0.0" "localhost")
-                                :local-port port
-                                :reuse-address t
-                                :input-timeout 30
-                                :output-timeout 30
-                                :connect-timeout 3
-                                :keepalive t)
+  (let ((socket (make-instance 'sb-bsd-sockets:inet-socket :type :stream :protocol :tcp)))
+    (setf (sb-bsd-sockets:sockopt-reuse-address socket) t)
+    (sb-bsd-sockets:socket-bind socket (if remote-access '(0 0 0 0) '(127 0 0 1)) port)
+    (sb-bsd-sockets:socket-listen socket 5)
     (format t "> server started on ~a~%" port)
-    (loop for s = (ccl:accept-connection socket :wait t) do
-      (format t "> connection accepted~%")
-      (ccl:process-run-function "mb-client" (lambda () (handle-client s))))))
+    (handler-case
+      (loop for c = (sb-bsd-sockets:socket-accept socket) do
+        (format t "> connection accepted~%")
+        (sb-thread:make-thread (lambda () (handle-client c))))
+      (sb-sys:interactive-interrupt ()
+        (format t "> stopping server")))
+    (sb-bsd-sockets:socket-close socket)))
 
 (defun read-registers (host address &key (quantity 1) (unit-id #xFF) (port 6502))
   "Reads holding registers."
-  (ccl:with-open-socket (s :type :stream
-                           :connect :active
-                           :remote-host host
-                           :remote-port port
-                           :input-timeout 1
-                           :output-timeout 1
-                           :connect-timeout 2)
-    (write-mbap s 4 unit-id #x03)
-    (write-int 2 address s)
-    (write-int 2 quantity s)
-    (finish-output s)
-    (multiple-value-bind (t-id p-id size u-id f-code) (read-mbap s)
-      (declare (ignore size) (ignore u-id))
-      (cond
-        ((not (= t-id *t-id*)) (format t "> bad transaction id: ~d != ~d~%" t-id *t-id*))
-        ((not (= p-id 0)) (format t "> bad protocol id: ~d != 0~%" p-id))
-        ((> f-code #x80) (format t "> error code: ~2,'0x~%" (read-byte s)))
-        (t (loop repeat (/ (read-byte s) 2) collect (read-int 2 s)))))))
+  (let ((vals nil) (err nil) (socket (make-instance 'sb-bsd-sockets:inet-socket :type :stream :protocol :tcp)))
+    (sb-bsd-sockets:socket-connect socket host port)
+    (let ((s (sb-bsd-sockets:socket-make-stream socket :input t :output t :element-type :default :timeout 3)))
+      (write-mbap s 4 unit-id #x03)
+      (write-int 2 address s)
+      (write-int 2 quantity s)
+      (finish-output s)
+      (multiple-value-bind (t-id p-id size u-id f-code) (read-mbap s)
+        (declare (ignore size) (ignore u-id))
+        (cond
+          ((not (= t-id *t-id*)) (setf err (format nil "bad transaction id: ~d != ~d" t-id *t-id*)))
+          ((not (= p-id 0)) (setf err (format nil "bad protocol id: ~d != 0" p-id)))
+          ((> f-code #x80) (setf err (format nil "error code: #x~2,'0x" (read-byte s))))
+          (t (setf vals (loop repeat (/ (read-byte s) 2) collect (read-int 2 s)))))))
+    (sb-bsd-sockets:socket-close socket)
+    (values vals err)))
 
 (defun read-coils (host address &key (quantity 1) (unit-id #xFF) (port 6502))
   "Reads coils."
-  (ccl:with-open-socket (s :type :stream
-                           :connect :active
-                           :remote-host host
-                           :remote-port port
-                           :input-timeout 1
-                           :output-timeout 1
-                           :connect-timeout 2)
-    (write-mbap s 4 unit-id #x01)
-    (write-int 2 address s)
-    (write-int 2 quantity s)
-    (finish-output s)
-    (multiple-value-bind (t-id p-id size u-id f-code) (read-mbap s)
-      (declare (ignore size) (ignore u-id))
-      (cond
-        ((not (= t-id *t-id*)) (format t "> bad transaction id: ~d != ~d~%" t-id *t-id*))
-        ((not (= p-id 0)) (format t "> bad protocol id: ~d != 0~%" p-id))
-        ((> f-code #x80) (format t "> error code: ~2,'0x~%" (read-byte s)))
-        (t (let ((bits (loop repeat (read-byte s) collect (int->bits 8 (read-byte s)))))
-             (subseq (apply #'append bits) 0 quantity)))))))
+  (let ((bits nil) (err nil) (socket (make-instance 'sb-bsd-sockets:inet-socket :type :stream :protocol :tcp)))
+    (sb-bsd-sockets:socket-connect socket host port)
+    (let ((s (sb-bsd-sockets:socket-make-stream socket :input t :output t :element-type :default :timeout 3)))
+      (write-mbap s 4 unit-id #x01)
+      (write-int 2 address s)
+      (write-int 2 quantity s)
+      (finish-output s)
+      (multiple-value-bind (t-id p-id size u-id f-code) (read-mbap s)
+        (declare (ignore size) (ignore u-id))
+        (cond
+          ((not (= t-id *t-id*)) (setf err (format nil "bad transaction id: ~d != ~d" t-id *t-id*)))
+          ((not (= p-id 0)) (setf err (format nil "bad protocol id: ~d != 0" p-id)))
+          ((> f-code #x80) (setf err (format nil "error code: #x~2,'0x" (read-byte s))))
+          (t (setf bits (loop repeat (read-byte s) collect (int->bits 8 (read-byte s))))))))
+    (sb-bsd-sockets:socket-close socket)
+    (values (subseq (apply #'append bits) 0 quantity) err)))
