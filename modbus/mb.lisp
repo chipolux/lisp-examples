@@ -1,4 +1,4 @@
-;;; A Simple MODBUS TCP Server and Client Implementation for Clozure CL
+;;; A Simple MODBUS TCP Server and Client Implementation
 
 (defpackage :mb
   (:use :common-lisp)
@@ -43,18 +43,21 @@
   "Reads the ModBus Application Protocol header from provided stream."
   (values
     (read-int 2 stream)       ; transaction id
-    (read-int 2 stream)       ; protocol id
-    (- (read-int 2 stream) 2) ; size (adjusted because we also read the unit id and function code)
+    (read-int 2 stream)       ; protocol id (always 0)
+    (- (read-int 2 stream) 2) ; size in bytes (- unit id and function code)
     (read-byte stream)        ; unit id
     (read-byte stream)))      ; function code
 
-(defun write-mbap (stream size unit-id function-code)
-  (setf *t-id* (mod (1+ *t-id*) #xFFFF))
-  (write-int 2 *t-id* stream)
-  (write-int 2 0 stream)
-  (write-int 2 (+ 2 size) stream)
-  (write-byte unit-id stream)
-  (write-byte function-code stream))
+(defun write-mbap (stream transaction-id protocol-id size unit-id function-code)
+  "Writes the ModBus Application Protocol header to the provided stream."
+  (if transaction-id
+    (write-int 2 transaction-id stream)           ; use provided transaction id
+    (progn (setf *t-id* (mod (1+ *t-id*) #xFFFF)) ; increment transaction id
+           (write-int 2 *t-id* stream)))          ; use global transaction id
+  (write-int 2 protocol-id stream)                ; protocol id (always 0)
+  (write-int 2 (+ 2 size) stream)                 ; size in bytes (+ unit id and function code)
+  (write-byte unit-id stream)                     ; unit id
+  (write-byte function-code stream))              ; function code
 
 (defun handle-client (c)
   "Handle a modbus client connection stream."
@@ -69,17 +72,8 @@
         (format t "  function code:  ~2,'0x~%" f-code)
         (format t "  rest:           ~{~2,'0x~^ ~}~%" (loop repeat size collect (read-byte s)))
         (finish-output)
-        (write-int 2 t-id s)
-        (write-int 2 p-id s)
-        (write-int 2 3 s)  ; response size
-        (write-byte u-id s)
-        ; send error response (4, server error)
-        (write-byte (+ #x80 f-code) s)
+        (write-mbap s t-id p-id 3 u-id (+ #x80 f-code))
         (write-byte #x04 s)
-        ; send success response with dummy data
-        ; (write-byte f-code s)
-        ; (write-byte 2 s)  ; count of register value bytes
-        ; (write-int 2 #xFFFF s)
         (finish-output s))
       (sb-sys:io-timeout ()
         (format t "> client timed out~%"))
@@ -87,8 +81,10 @@
         (format t "> stream closed by client~%"))))
   (sb-bsd-sockets:socket-close c))
 
-(defun make-server (&key (port 6502) (remote-access nil))
-  "Starts a simple modbus server."
+(defun make-server (&key (port 502) (remote-access nil))
+  "Starts a simple modbus server.
+   port defaults to 502
+   remote-access defaults to NIL, if T it binds to all interfaces"
   (let ((socket (make-instance 'sb-bsd-sockets:inet-socket :type :stream :protocol :tcp)))
     (setf (sb-bsd-sockets:sockopt-reuse-address socket) t)
     (sb-bsd-sockets:socket-bind socket (if remote-access '(0 0 0 0) '(127 0 0 1)) port)
@@ -102,12 +98,17 @@
         (format t "> stopping server")))
     (sb-bsd-sockets:socket-close socket)))
 
-(defun read-registers (host address &key (quantity 1) (unit-id #xFF) (port 6502))
-  "Reads holding registers."
+(defun read-registers (host address &key (quantity 1) (unit-id #xFF) (port 502))
+  "Reads holding registers.
+   host should be in format '(127 0 0 1)
+   address is the starting address
+   quantity defaults to 1
+   unit-id defaults to #xFF
+   port defaults to 502"
   (let ((vals nil) (err nil) (socket (make-instance 'sb-bsd-sockets:inet-socket :type :stream :protocol :tcp)))
     (sb-bsd-sockets:socket-connect socket host port)
     (let ((s (sb-bsd-sockets:socket-make-stream socket :input t :output t :element-type :default :timeout 3)))
-      (write-mbap s 4 unit-id #x03)
+      (write-mbap s nil 0 4 unit-id #x03)
       (write-int 2 address s)
       (write-int 2 quantity s)
       (finish-output s)
@@ -121,12 +122,17 @@
     (sb-bsd-sockets:socket-close socket)
     (values vals err)))
 
-(defun read-coils (host address &key (quantity 1) (unit-id #xFF) (port 6502))
-  "Reads coils."
+(defun read-coils (host address &key (quantity 1) (unit-id #xFF) (port 502))
+  "Reads coils.
+   host should be in format '(127 0 0 1)
+   address is the starting address
+   quantity defaults to 1
+   unit-id defaults to #xFF
+   port defaults to 502"
   (let ((bits nil) (err nil) (socket (make-instance 'sb-bsd-sockets:inet-socket :type :stream :protocol :tcp)))
     (sb-bsd-sockets:socket-connect socket host port)
     (let ((s (sb-bsd-sockets:socket-make-stream socket :input t :output t :element-type :default :timeout 3)))
-      (write-mbap s 4 unit-id #x01)
+      (write-mbap s nil 0 4 unit-id #x01)
       (write-int 2 address s)
       (write-int 2 quantity s)
       (finish-output s)
