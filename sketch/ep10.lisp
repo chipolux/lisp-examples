@@ -20,9 +20,9 @@
     ((-1) (decf *angle* 0.05))
     ((1) (incf *angle* 0.05)))
   (set-angle *thrust* *angle*)
-  (if *thrusting*
-    (set-length *thrust* 0.1)
-    (set-length *thrust* 0))
+  ; (if *thrusting*
+  ;   (set-length *thrust* 0.001)
+  ;   (set-length *thrust* 0))
   (accelerate *ship* *thrust*)
   (update *ship*)
   (with-slots (position) *ship*
@@ -67,4 +67,8 @@
           ((:scancode-d :scancode-right) (decf *turning*)))))))
 
 
-(make-instance 'ep10)
+(defun show() (make-instance 'ep10))
+
+(defun run ()
+  #-sbcl (show)
+  #+sbcl (sdl2:make-this-thread-main #'show))
